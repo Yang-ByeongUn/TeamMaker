@@ -1,0 +1,61 @@
+package com.TeamMaker.demo.entity;
+
+import static com.querydsl.core.types.PathMetadataFactory.*;
+
+import com.querydsl.core.types.dsl.*;
+
+import com.querydsl.core.types.PathMetadata;
+import javax.annotation.processing.Generated;
+import com.querydsl.core.types.Path;
+import com.querydsl.core.types.dsl.PathInits;
+
+
+/**
+ * QTeamBoard is a Querydsl query type for TeamBoard
+ */
+@Generated("com.querydsl.codegen.DefaultEntitySerializer")
+public class QTeamBoard extends EntityPathBase<TeamBoard> {
+
+    private static final long serialVersionUID = 112232309L;
+
+    private static final PathInits INITS = PathInits.DIRECT2;
+
+    public static final QTeamBoard teamBoard = new QTeamBoard("teamBoard");
+
+    public final ComparablePath<java.util.UUID> adId = createComparable("adId", java.util.UUID.class);
+
+    public final ComparablePath<java.util.UUID> id = createComparable("id", java.util.UUID.class);
+
+    public final ComparablePath<java.util.UUID> jgId = createComparable("jgId", java.util.UUID.class);
+
+    public final ComparablePath<java.util.UUID> midId = createComparable("midId", java.util.UUID.class);
+
+    public final ComparablePath<java.util.UUID> supId = createComparable("supId", java.util.UUID.class);
+
+    public final ComparablePath<java.util.UUID> topId = createComparable("topId", java.util.UUID.class);
+
+    public final QStreamer user;
+
+    public QTeamBoard(String variable) {
+        this(TeamBoard.class, forVariable(variable), INITS);
+    }
+
+    public QTeamBoard(Path<? extends TeamBoard> path) {
+        this(path.getType(), path.getMetadata(), PathInits.getFor(path.getMetadata(), INITS));
+    }
+
+    public QTeamBoard(PathMetadata metadata) {
+        this(metadata, PathInits.getFor(metadata, INITS));
+    }
+
+    public QTeamBoard(PathMetadata metadata, PathInits inits) {
+        this(TeamBoard.class, metadata, inits);
+    }
+
+    public QTeamBoard(Class<? extends TeamBoard> type, PathMetadata metadata, PathInits inits) {
+        super(type, metadata, inits);
+        this.user = inits.isInitialized("user") ? new QStreamer(forProperty("user")) : null;
+    }
+
+}
+
