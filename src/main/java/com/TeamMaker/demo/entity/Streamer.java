@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 @Entity
-@Table(name = "users")
+@Table(name = "streamers")
 @RequiredArgsConstructor
 @Getter
 public class Streamer {
@@ -30,10 +31,10 @@ public class Streamer {
   private LocalDateTime createdAt;
   @LastModifiedDate
   private LocalDateTime updatedAt;
-  @OneToMany
-  private List<Nickname> nicknames;
-  @OneToMany
-  private List<TeamBoard> teamBoards;
+  @OneToMany(mappedBy = "nickname")
+  private final List<Nickname> nicknames = new ArrayList<>();;
+  @OneToMany(mappedBy = "streamer")
+  private final List<TeamBoard> teamBoards = new ArrayList<>();;
 
   public Streamer(StreamerSaveDto userSaveDto) {
     score = userSaveDto.getScore();
@@ -41,5 +42,10 @@ public class Streamer {
     position = userSaveDto.getPosition();
     createdAt = userSaveDto.getCreatedAt();
     updatedAt = userSaveDto.getCreatedAt();
+  }
+  public void setDetails(Double score, String streamerName, Position position){
+    if(score != null ) this.score = score;
+    if(streamerName != null ) this.streamerName = streamerName;
+    if(position != null ) this.position = position;
   }
 }

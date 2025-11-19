@@ -18,7 +18,8 @@ public class NicknameRepositoryImpl implements NicknameRepositoryCustom {
   private final QNickname nickname = QNickname.nickname1;
 
   public List<Nickname> findNicknamesByConditions(UUID streamerId, String nicknameStr, Tier tier) {
-    return queryFactory.selectFrom(nickname).where(eqStreamerId(streamerId), eqNickname(nicknameStr), eqTier(tier)).fetch();
+    return queryFactory.selectFrom(nickname).where(eqStreamerId(streamerId), eqNickname(nicknameStr), eqTier(tier))
+        .orderBy(nickname.tier.desc(), nickname.id.asc()).fetch();
   }
 
   private BooleanExpression eqStreamerId(UUID streamerId) {

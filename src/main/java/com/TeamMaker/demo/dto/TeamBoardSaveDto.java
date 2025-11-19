@@ -1,9 +1,12 @@
 package com.TeamMaker.demo.dto;
 
 import com.TeamMaker.demo.entity.Streamer;
+import java.util.UUID;
 import lombok.Data;
 
 @Data
 public class TeamBoardSaveDto {
-  Streamer streamer;
+  private UUID streamerId;
+  private String title;
+
 }

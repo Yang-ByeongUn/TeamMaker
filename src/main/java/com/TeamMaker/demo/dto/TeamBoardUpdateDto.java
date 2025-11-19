@@ -5,10 +5,11 @@ import lombok.Data;
 
 @Data
 public class TeamBoardUpdateDto {
-  public UUID teamBoardId;
-  public UUID topId;
-  public UUID jgId;
-  public UUID midId;
-  public UUID adId;
-  public UUID supId;
+  private  UUID teamBoardId;
+  private String title;
+  private  UUID topId;
+  private  UUID jgId;
+  private  UUID midId;
+  private  UUID adId;
+  private  UUID supId;
 }

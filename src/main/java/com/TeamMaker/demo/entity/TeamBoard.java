@@ -5,6 +5,7 @@ import com.TeamMaker.demo.dto.TeamBoardUpdateDto;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -18,10 +19,11 @@ import lombok.Setter;
 @RequiredArgsConstructor
 @Getter
 public class TeamBoard {
-  @Id
+  @Id @GeneratedValue
   private UUID id;
+  private String title;
   @ManyToOne(fetch = FetchType.LAZY)
-  private Streamer user;
+  private Streamer streamer;
   @Nullable
   private UUID topId;
   @Nullable
@@ -34,12 +36,15 @@ public class TeamBoard {
   private UUID supId;
   @Setter
   private double sumScore;
-  public TeamBoard(TeamBoardSaveDto teamBoardSaveDto) {
-    this.user = teamBoardSaveDto.getStreamer();
-    sumScore = 187;
+
+  public TeamBoard(Streamer streamer, String title) {
+    this.streamer = streamer;
+    this.title = title;
+    this.sumScore = 187;
   }
 
   public void update(TeamBoardUpdateDto teamBoardUpdateDto) {
+    this.title = teamBoardUpdateDto.getTitle();
     topId = teamBoardUpdateDto.getTopId();
     jgId = teamBoardUpdateDto.getJgId();
     midId = teamBoardUpdateDto.getMidId();

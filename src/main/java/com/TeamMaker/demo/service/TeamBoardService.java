@@ -1,14 +1,15 @@
 package com.TeamMaker.demo.service;
 
+import com.TeamMaker.demo.common.exception.teamBoard.ExceedTableCountException;
 import com.TeamMaker.demo.dto.TeamBoardSaveDto;
 import com.TeamMaker.demo.dto.TeamBoardUpdateDto;
 import com.TeamMaker.demo.entity.Streamer;
 import com.TeamMaker.demo.entity.TeamBoard;
 import com.TeamMaker.demo.repository.streamer.StreamerRepository;
 import com.TeamMaker.demo.repository.teamBoard.TeamBoardRepository;
-import com.TeamMaker.demo.utils.exception.ErrorCode;
-import com.TeamMaker.demo.utils.exception.streamer.StreamerNotFoundException;
-import com.TeamMaker.demo.utils.exception.teamBoard.TeamBoardNotFoundException;
+import com.TeamMaker.demo.common.exception.ErrorCode;
+import com.TeamMaker.demo.common.exception.streamer.StreamerNotFoundException;
+import com.TeamMaker.demo.common.exception.teamBoard.TeamBoardNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -24,12 +25,22 @@ public class TeamBoardService {
   private final StreamerRepository streamerRepository;
 
   public TeamBoard save(TeamBoardSaveDto teamBoardSaveDto) {
-    TeamBoard teamBoard = new TeamBoard(teamBoardSaveDto);
+    Streamer streamer = streamerRepository.findById(teamBoardSaveDto.getStreamerId())
+        .orElseThrow(() -> new StreamerNotFoundException(ErrorCode.STREAMER_NOT_FOUND));
+    if (streamer.getTeamBoards().size() > 10) {
+      throw new ExceedTableCountException(ErrorCode.EXCEED_TABLE_COUNT);
+    }
+    TeamBoard teamBoard = new TeamBoard(streamer, teamBoardSaveDto.getTitle());
     return teamBoardRepository.save(teamBoard);
   }
 
   public TeamBoard findById(UUID id) {
     return teamBoardRepository.findById(id).orElseThrow(() -> new TeamBoardNotFoundException(ErrorCode.TEAM_BOARD_NOT_FOUND));
+  }
+
+  public List<TeamBoard> findByStreamerId(UUID streamerId) {
+    List<TeamBoard> list = teamBoardRepository.findTeamBoardsByStreamerId(streamerId);
+    return new ArrayList<>(list);
   }
 
   @Transactional
@@ -50,6 +61,7 @@ public class TeamBoardService {
     list.add(teamBoardUpdateDto.getAdId());
     list.add(teamBoardUpdateDto.getSupId());
     for (UUID streamerId : list) {
+      if (streamerId == null) continue;
       Streamer streamer = streamerRepository.findById(streamerId).orElseThrow(() -> new StreamerNotFoundException(ErrorCode.STREAMER_NOT_FOUND));
       init -= streamer.getScore();
     }
@@ -59,4 +71,6 @@ public class TeamBoardService {
   public void deleteTeamBoard(UUID id) {
     teamBoardRepository.deleteById(id);
   }
+
+
 }
