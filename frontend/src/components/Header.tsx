@@ -1,17 +1,26 @@
 import {HelpCircle, LogOut} from 'lucide-react';
 import { Button } from './ui/button.tsx';
+import { logoutRequest } from '../api/authApi';
 
 interface HeaderProps {
   onHelpClick: () => void;
 }
 
 export function Header({ onHelpClick }: HeaderProps) {
-  const handleLogout = () => {
-    // 로그아웃 로직 (예: 세션 클리어, 리다이렉트 등)
+  const handleLogout = async () => {
     if (confirm('로그아웃 하시겠습니까?')) {
-      // 실제 로그아웃 처리
-      console.log('로그아웃 되었습니다.');
-      // 예: window.location.href = '/login';
+      try {
+        await logoutRequest();
+
+        // 클라이언트 토큰 제거
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+
+        // 로그인 페이지로 이동
+        window.location.href = "/login";
+      } catch (error) {
+        console.error("로그아웃 실패:", error);
+      }
     }
   };
 

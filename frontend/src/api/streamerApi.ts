@@ -5,7 +5,7 @@ export interface StreamerDto {
   id: string;
   streamerName: string;
   score: number;
-  position: string; // 서버 enum (예: "TOP")
+  position: string;
 }
 
 export interface CreateStreamerRequest {

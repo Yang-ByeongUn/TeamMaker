@@ -14,6 +14,7 @@ import {
   createTeamBoard,
   updateTeamBoard,
   deleteTeamBoardApi,
+  reorderTeamBoards,
 } from "./api/teamBoardApi";
 
 import {
@@ -35,6 +36,7 @@ export type TableData = {
   id: string;
   name: string;
   positions: Partial<Record<Position, Player>>;
+  sortOrder: number;
 };
 
 export type Streamer = {
@@ -76,6 +78,7 @@ function mapDtoToTableData(
     id: dto.id,
     name: dto.title,
     positions,
+    sortOrder: dto.sortOrder,
   };
 }
 
@@ -90,8 +93,27 @@ function buildUpdateDtoFromTable(table: TableData): TeamBoardUpdateDto {
     supId: table.positions.Support?.id ?? null,
   };
 }
+function mapApiPositionToUiPosition(apiPos: string): Position {
+  switch (apiPos) {
+    case "TOP":
+      return "Top";
+    case "JUNGLE":
+      return "Jungle";
+    case "MID":
+      return "Mid";
+    case "ADC":
+      return "Bottom";   // ✔ ADC는 Bottom 포지션과 매칭
+    case "SUPPORT":
+      return "Support";
+    default:
+      return "Top";
+  }
+}
 
 export default function App() {
+  const [selectedPositions, setSelectedPositions] = useState<Position[]>([]);
+  const [draggingTableId, setDraggingTableId] = useState<string | null>(null);
+
   const [streamers, setStreamers] = useState<Streamer[]>([]);
   const [selectedStreamerId, setSelectedStreamerId] = useState<string>("");
 
@@ -117,7 +139,16 @@ export default function App() {
   const selectedStreamer =
       streamers.find((s) => s.id === selectedStreamerId) ?? null;
 
-  // ✅ 최초 로딩: 스트리머 불러오고 → 내 팀보드 불러오기
+  const handleTableCardDragStart =
+      (id: string) => (e: DragEvent<HTMLDivElement>) => {
+        setDraggingTableId(id);
+        e.dataTransfer.effectAllowed = "move";
+      };
+
+  const handleTableCardDragEnd = () => {
+    setDraggingTableId(null);
+  };
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -126,7 +157,7 @@ export default function App() {
         const mapped: Streamer[] = list.map((s) => ({
           id: s.id,
           name: s.streamerName,
-          position: s.position as Position,
+          position: mapApiPositionToUiPosition(String(s.position)), // ⬅ 변환 적용
           rank: "",
           winRate: "0%",
           score: s.score,
@@ -152,6 +183,7 @@ export default function App() {
         });
 
         const dtos: TeamBoardDto[] = await fetchMyTeamBoards();
+        dtos.sort((a, b) => a.sortOrder - b.sortOrder);
         const tb = dtos.map((dto) => mapDtoToTableData(dto, streamerMap));
 
         setTables(tb);
@@ -171,8 +203,17 @@ export default function App() {
     .toLowerCase()
     .includes(searchQuery.toLowerCase());
     const matchScore = s.score >= minScore && s.score <= maxScore;
-    return matchSearch && matchScore;
+    const matchPosition =
+        selectedPositions.length === 0 || selectedPositions.includes(s.position);
+
+    return matchSearch && matchScore && matchPosition;
   });
+
+  const handleTogglePosition = (pos: Position) => {
+    setSelectedPositions((prev) =>
+        prev.includes(pos) ? prev.filter((p) => p !== pos) : [...prev, pos],
+    );
+  };
 
   const handleViewDetails = (streamer: Streamer) => {
     setSelectedStreamerId(streamer.id);
@@ -218,12 +259,13 @@ export default function App() {
       const mapped: Streamer[] = list.map((s) => ({
         id: s.id,
         name: s.streamerName,
-        position: s.position as Position,
+        position: mapApiPositionToUiPosition(String(s.position)),
         rank: "",
         winRate: "0%",
         score: s.score,
         tableLists: [],
       }));
+
 
       setStreamers(mapped);
 
@@ -238,8 +280,14 @@ export default function App() {
   // 드래그 앤 드롭
   const handleStreamerDragStart =
       (id: string) => (e: DragEvent<HTMLDivElement>) => {
+        console.log("DRAG START STREAMER:", id);
         setDraggingStreamerId(id);
+
+        // 혹시 Sidebar 쪽에서 setData를 못 태우는 상황 대비해서 한 번 더
         e.dataTransfer.effectAllowed = "move";
+        if (!e.dataTransfer.getData("text/plain")) {
+          e.dataTransfer.setData("text/plain", id);
+        }
       };
 
   const handleStreamerDragEnd = () => {
@@ -253,43 +301,83 @@ export default function App() {
   const handleTableDrop =
       (tableId: string) => async (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault();
-        if (!draggingStreamerId) return;
 
-        const streamer = streamers.find((s) => s.id === draggingStreamerId);
-        if (!streamer) return;
+        // event 에서 바로 아이디 꺼내기
+        const fromEvent = e.dataTransfer.getData("text/plain");
+        const streamerId = fromEvent || draggingStreamerId;
 
-        let updatedTable: TableData | undefined;
-
-        setTables((prev) =>
-            prev.map((table) => {
-              if (table.id !== tableId) return table;
-              const newTable: TableData = {
-                ...table,
-                positions: {
-                  ...table.positions,
-                  [streamer.position]: {
-                    id: streamer.id,
-                    name: streamer.name,
-                    score: streamer.score,
-                  },
-                },
-              };
-              updatedTable = newTable;
-              return newTable;
-            }),
+        console.log(
+            "DROP ON TABLE:",
+            tableId,
+            "draggingStreamerId =", draggingStreamerId,
+            "fromEvent =", fromEvent,
         );
 
-        setSelectedTableId(tableId);
-        setDraggingStreamerId(null);
+        // 1) 스트리머 드롭
+        if (streamerId) {
+          const streamer = streamers.find((s) => s.id === streamerId);
+          if (!streamer) return;
 
-        if (updatedTable) {
-          try {
-            await updateTeamBoard(buildUpdateDtoFromTable(updatedTable));
-          } catch (e) {
-            console.error(e);
+          let updatedTable: TableData | undefined;
+
+          setTables((prev) =>
+              prev.map((table) => {
+                if (table.id !== tableId) return table;
+                const newTable: TableData = {
+                  ...table,
+                  positions: {
+                    ...table.positions,
+                    [streamer.position]: {
+                      id: streamer.id,
+                      name: streamer.name,
+                      score: streamer.score,
+                    },
+                  },
+                };
+                updatedTable = newTable;
+                return newTable;
+              }),
+          );
+
+          setSelectedTableId(tableId);
+          setDraggingStreamerId(null);
+
+          if (updatedTable) {
+            try {
+              await updateTeamBoard(buildUpdateDtoFromTable(updatedTable));
+            } catch (e) {
+              console.error(e);
+            }
           }
+          return;
+        }
+
+        // 2) 테이블 순서 변경 (기존 로직 그대로)
+        if (draggingTableId) {
+          if (draggingTableId === tableId) {
+            setDraggingTableId(null);
+            return;
+          }
+          setTables((prev) => {
+            const newTables = [...prev];
+            const fromIndex = newTables.findIndex((t) => t.id === draggingTableId);
+            const toIndex = newTables.findIndex((t) => t.id === tableId);
+            if (fromIndex === -1 || toIndex === -1) return prev;
+
+            const [moved] = newTables.splice(fromIndex, 1);
+            newTables.splice(toIndex, 0, moved);
+
+            reorderTeamBoards(newTables.map((t) => t.id)).catch((err) => {
+              console.error("테이블 순서 저장 실패:", err);
+            });
+
+            return newTables;
+          });
+          setDraggingTableId(null);
         }
       };
+
+
 
   // 테이블 리스트 적용
   const handleApplyStreamerList = async (tableId: string, listId: string) => {
@@ -406,6 +494,7 @@ export default function App() {
         id: newId,
         name,
         positions: {},
+        sortOrder: tables.length,
       };
 
       setTables((prev) => [...prev, newTable]);
@@ -516,6 +605,8 @@ export default function App() {
               onDragStart={handleStreamerDragStart}
               onDragEnd={handleStreamerDragEnd}
               scoreMax={SCORE_MAX}
+              selectedPositions={selectedPositions}
+              onTogglePosition={handleTogglePosition}
           />
 
           <main className="flex-1 ml-80 flex flex-col overflow-hidden">
@@ -538,6 +629,8 @@ export default function App() {
                   onSelectStreamerByName={handleSelectStreamerByName}
                   onDragOver={handleTableDragOver}
                   onDrop={handleTableDrop}
+                  onTableDragStart={handleTableCardDragStart}
+                  onTableDragEnd={handleTableCardDragEnd}
               />
             </div>
 
@@ -548,12 +641,12 @@ export default function App() {
                 }`}
             />
 
-            {selectedStreamer && selectedTable && (
+            {selectedStreamer  && (
                 <div className="flex-1 overflow-hidden bg-white border-t border-neutral-200 shadow-lg">
                   <div className="p-8 h-full overflow-y-auto">
                     <StreamerDetail
                         streamer={selectedStreamer}
-                        selectedTable={selectedTable}
+                        selectedTable={selectedTable ?? null}
                     />
                   </div>
                 </div>

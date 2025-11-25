@@ -9,6 +9,7 @@ export interface TeamBoardDto {
   adId: string | null;
   supId: string | null;
   sumScore: number;
+  sortOrder: number;
 }
 
 export interface TeamBoardSaveDto {
@@ -25,12 +26,43 @@ export interface TeamBoardUpdateDto {
   supId: string | null;
 }
 
+export interface ReorderTeamBoardRequest {
+  ids: string[];
+}
+
 const BASE_URL = "/api/teamBoards";
 const ACCESS_TOKEN_KEY = "accessToken";
 
+// teamBoardApi.ts
+
+export async function reorderTeamBoards(ids: string[]): Promise<void> {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("로그인 정보가 없습니다.");
+  }
+
+  const res = await fetch(`${BASE_URL}/reorder`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ ids }),
+  });
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    console.error(
+        "[reorderTeamBoards] 실패",
+        "status =", res.status,
+        "statusText =", res.statusText,
+        "body =", text,
+    );
+    throw new Error(text || "테이블 순서 저장 실패");
+  }
+}
+
+
 function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };

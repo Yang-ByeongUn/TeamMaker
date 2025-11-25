@@ -46,7 +46,11 @@ interface TableGridProps {
   onSelectStreamerByName: (name: string) => void;
   onDragOver: (e: DragEvent<HTMLDivElement>) => void;
   onDrop: (tableId: string) => (e: DragEvent<HTMLDivElement>) => void;
+
+  onTableDragStart: (tableId: string) => (e: DragEvent<HTMLDivElement>) => void;
+  onTableDragEnd: (e: DragEvent<HTMLDivElement>) => void;
 }
+
 
 const positions: Position[] = ['Top', 'Jungle', 'Mid', 'Bottom', 'Support'];
 
@@ -65,6 +69,8 @@ export function TableGrid({
                             onSelectStreamerByName,
                             onDragOver,
                             onDrop,
+                            onTableDragStart,
+                            onTableDragEnd
                           }: TableGridProps) {
   const [editingTableId, setEditingTableId] = useState<string | null>(null);
   const [editingTableName, setEditingTableName] = useState<string>('');
@@ -114,7 +120,12 @@ export function TableGrid({
                     onDragOver={onDragOver}
                     onDrop={onDrop(table.id)}
                 >
-                  <CardHeader className="border-b border-neutral-200 bg-neutral-50 space-y-1 py-2 px-3">
+                  <CardHeader
+                      className="border-b border-neutral-200 bg-neutral-50 space-y-1 py-2 px-3"
+                      draggable
+                      onDragStart={onTableDragStart(table.id)}
+                      onDragEnd={onTableDragEnd}
+                  >
 
                   <div className="flex items-center justify-between gap-2">
                       {/* 테이블 이름 (왼쪽) */}
