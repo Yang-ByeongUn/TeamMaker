@@ -1,11 +1,16 @@
 package com.TeamMaker.demo.entity;
 
 import com.TeamMaker.demo.dto.StreamerSaveDto;
+import com.TeamMaker.demo.common.utils.security.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,6 +18,8 @@ import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -21,7 +28,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 @RequiredArgsConstructor
 @Getter
 public class Streamer {
-  @Id
+  @Id @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
   private double score;
   private String streamerName;
@@ -31,10 +38,15 @@ public class Streamer {
   private LocalDateTime createdAt;
   @LastModifiedDate
   private LocalDateTime updatedAt;
-  @OneToMany(mappedBy = "nickname")
+  @OneToMany(mappedBy = "streamer")
   private final List<Nickname> nicknames = new ArrayList<>();;
   @OneToMany(mappedBy = "streamer")
   private final List<TeamBoard> teamBoards = new ArrayList<>();;
+
+  @Setter
+  @OneToOne
+  @JoinColumn(name = "user_id")
+  private User user;
 
   public Streamer(StreamerSaveDto userSaveDto) {
     score = userSaveDto.getScore();
@@ -48,4 +60,5 @@ public class Streamer {
     if(streamerName != null ) this.streamerName = streamerName;
     if(position != null ) this.position = position;
   }
+
 }

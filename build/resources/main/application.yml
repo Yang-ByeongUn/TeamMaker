@@ -14,4 +14,7 @@ spring:
       hibernate:
         highlight_sql: true
     open-in-view: false
-
+jwt:
+  secret: ${JWT_SECRET}
+  token-validity-in-seconds: 3600
+  refresh-token-validity-seconds: 1209600

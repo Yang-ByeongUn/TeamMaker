@@ -6,7 +6,5 @@ import lombok.Data;
 
 @Data
 public class TeamBoardSaveDto {
-  private UUID streamerId;
   private String title;
-
 }

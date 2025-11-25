@@ -3,8 +3,10 @@ package com.TeamMaker.demo.dto;
 import com.TeamMaker.demo.entity.Position;
 import com.TeamMaker.demo.entity.Streamer;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class StreamerDto {
   public String streamerName;
   public Position position;

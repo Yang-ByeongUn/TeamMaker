@@ -1,5 +1,8 @@
 package com.TeamMaker.demo.controller;
 
+import com.TeamMaker.demo.common.utils.security.CustomUserDetails;
+import com.TeamMaker.demo.common.utils.security.User;
+import com.TeamMaker.demo.common.utils.security.repository.UserRepository;
 import com.TeamMaker.demo.dto.TeamBoardDto;
 import com.TeamMaker.demo.dto.TeamBoardSaveDto;
 import com.TeamMaker.demo.dto.TeamBoardUpdateDto;
@@ -9,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,10 +28,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class TeamBoardController {
 
   private final TeamBoardService teamBoardService;
+  private final UserRepository userRepository;
 
   @PostMapping()
-  public ResponseEntity<UUID> saveTeamBoard(@RequestBody TeamBoardSaveDto teamBoardSaveDto) {
-    UUID savedId = teamBoardService.save(teamBoardSaveDto).getId();
+  public ResponseEntity<UUID> saveTeamBoard(
+      @RequestBody TeamBoardSaveDto dto,
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    long userID = userDetails.getUser().getId();
+    User user = userRepository.findById(userID);
+    UUID streamerId = user.getStreamer().getId();
+    UUID savedId = teamBoardService.save(dto, streamerId).getId();
     return ResponseEntity.ok(savedId);
   }
 
@@ -35,6 +46,14 @@ public class TeamBoardController {
   public ResponseEntity<TeamBoardDto> findTeamBoardById(@PathVariable UUID teamBoardId) {
     TeamBoard teamBoard = teamBoardService.findById(teamBoardId);
     return ResponseEntity.ok(new TeamBoardDto(teamBoard));
+  }
+  @GetMapping("/me")
+  public ResponseEntity<List<TeamBoardDto>> findMyTeamBoards(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    long userID = userDetails.getUser().getId();
+    User user = userRepository.findById(userID);
+    UUID streamerId = user.getStreamer().getId();
+    List<TeamBoard> teamBoards = teamBoardService.findByStreamerId(streamerId);
+    return ResponseEntity.ok(teamBoards.stream().map(TeamBoardDto::new).toList());
   }
 
   @GetMapping("/streamer/{streamerId}/names")

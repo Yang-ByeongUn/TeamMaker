@@ -6,6 +6,7 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -19,7 +20,7 @@ import lombok.Setter;
 @RequiredArgsConstructor
 @Getter
 public class TeamBoard {
-  @Id @GeneratedValue
+  @Id @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
   private String title;
   @ManyToOne(fetch = FetchType.LAZY)

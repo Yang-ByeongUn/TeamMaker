@@ -1,0 +1,78 @@
+/* 전역 기본값 리셋 */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* ✔ 부모 레이아웃 완전 무시하고 화면 전체 차지 */
+.page-wrapper {
+  position: fixed;        /* 상위 flex/grid 영향 안 받도록 */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #f3f4f6;
+}
+
+/* 카드 UI */
+.login-card {
+  width: 380px;
+  background: white;
+  padding: 2.5rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.login-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+.login-input {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 0.9rem;
+  background: #111827;
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.login-footer {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.login-footer span {
+  color: #111827;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* 에러 메시지 스타일도 있으면 좋음 */
+.login-error {
+  margin-bottom: 0.75rem;
+  color: #dc2626;
+  font-size: 0.85rem;
+}

@@ -24,8 +24,9 @@ public class TeamBoardService {
   private final TeamBoardRepository teamBoardRepository;
   private final StreamerRepository streamerRepository;
 
-  public TeamBoard save(TeamBoardSaveDto teamBoardSaveDto) {
-    Streamer streamer = streamerRepository.findById(teamBoardSaveDto.getStreamerId())
+  @Transactional
+  public TeamBoard save(TeamBoardSaveDto teamBoardSaveDto, UUID streamerId) {
+    Streamer streamer = streamerRepository.findById(streamerId)
         .orElseThrow(() -> new StreamerNotFoundException(ErrorCode.STREAMER_NOT_FOUND));
     if (streamer.getTeamBoards().size() > 10) {
       throw new ExceedTableCountException(ErrorCode.EXCEED_TABLE_COUNT);
